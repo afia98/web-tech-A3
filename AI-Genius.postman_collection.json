@@ -1,0 +1,195 @@
+{
+  "info": {
+    "name": "AI-Genius - JWT Auth & RBAC",
+    "_postman_id": "afia-eman-assignment-03",
+    "description": "Complete workflow: Login → Access Protected API → Token Expires → Refresh → Access Denied on unauthorized roles",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. AUTH - Login as Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.accessToken) {",
+              "  pm.collectionVariables.set('accessToken', json.accessToken);",
+              "  console.log('Access token saved.');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@ai-genius.com\",\n  \"password\": \"admin123\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+      }
+    },
+    {
+      "name": "2. AUTH - Login as Premium_User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.accessToken) {",
+              "  pm.collectionVariables.set('accessToken', json.accessToken);",
+              "  console.log('Premium user access token saved.');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"premium@ai-genius.com\",\n  \"password\": \"premium123\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+      }
+    },
+    {
+      "name": "3. AUTH - Login as Free_User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.accessToken) {",
+              "  pm.collectionVariables.set('accessToken', json.accessToken);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"free@ai-genius.com\",\n  \"password\": \"free123\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+      }
+    },
+    {
+      "name": "4. AI - GET Free Model (all users)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": { "raw": "{{baseUrl}}/api/ai/free-model", "host": ["{{baseUrl}}"], "path": ["api", "ai", "free-model"] }
+      }
+    },
+    {
+      "name": "5. AI - POST Premium Model (Premium + Admin only)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"prompt\": \"Write a short story about a robot learning to paint.\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/ai/premium-model", "host": ["{{baseUrl}}"], "path": ["api", "ai", "premium-model"] }
+      }
+    },
+    {
+      "name": "6. AI - DELETE Purge Cache (Admin only)",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": { "raw": "{{baseUrl}}/api/ai/purge-cache", "host": ["{{baseUrl}}"], "path": ["api", "ai", "purge-cache"] }
+      }
+    },
+    {
+      "name": "7. AUTH - Refresh Access Token (uses httpOnly cookie)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.accessToken) {",
+              "  pm.collectionVariables.set('accessToken', json.accessToken);",
+              "  console.log('New access token saved after refresh.');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/auth/refresh", "host": ["{{baseUrl}}"], "path": ["api", "auth", "refresh"] }
+      }
+    },
+    {
+      "name": "8. AUTH - Logout",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/auth/logout", "host": ["{{baseUrl}}"], "path": ["api", "auth", "logout"] }
+      }
+    },
+    {
+      "name": "9. TEST - No Token (expect 401)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/ai/free-model", "host": ["{{baseUrl}}"], "path": ["api", "ai", "free-model"] }
+      }
+    },
+    {
+      "name": "10. TEST - Free_User tries Premium (expect 403)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"prompt\": \"I should not be able to call this\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/ai/premium-model", "host": ["{{baseUrl}}"], "path": ["api", "ai", "premium-model"] }
+      }
+    },
+    {
+      "name": "11. TEST - Premium_User tries Admin Purge (expect 403)",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": { "raw": "{{baseUrl}}/api/ai/purge-cache", "host": ["{{baseUrl}}"], "path": ["api", "ai", "purge-cache"] }
+      }
+    }
+  ]
+}
